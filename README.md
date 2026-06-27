@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RentUrDress
 
-## Getting Started
+Peer-to-peer dress rental marketplace built with Next.js App Router, MongoDB, Mongoose, and Tailwind CSS.
 
-First, run the development server:
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy environment variables:
+
+```bash
+copy .env.example .env.local
+```
+
+3. Update `.env.local`:
+   - `MONGODB_URI` with your MongoDB connection string
+   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_ID` for Google login
+
+4. Seed database (wipes existing collections and inserts demo data):
+
+```bash
+npm run seed
+```
+
+5. Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Login is mandatory before accessing app pages (`/`, `/dashboard`, `/collections`, `/profile`).
+> Navigation menu is role-based: `user` sees Home/Dashboard/Collections/Profile, `admin` also sees Admin.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Demo Login
 
-## Learn More
+- Admin seeded user: `mani@renturdress.com` / `Mani@123`
+- Normal seeded users: any seeded email / `Rent@123`
+- Google login: use the login page One Tap/button after setting Google client IDs.
 
-To learn more about Next.js, take a look at the following resources:
+## Backend Endpoints (Next.js Route Handlers)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+All backend APIs live in `app/api/**/route.ts`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `GET /api/dresses` - list dresses with optional `search` and `location` filters.
+- `GET /api/users` - list users.
+- `GET /api/profile/:userId` - profile data (listed dresses, collections, active orders, transactions).
+- `GET /api/profile/me` - authenticated profile data for current user.
+- `GET /api/collections` - list all public user collections/materials.
+- `POST /api/collections` - create your collection with image upload/URL.
+- `PATCH /api/collections/:collectionId` - owner/admin updates a collection.
+- `DELETE /api/collections/:collectionId` - owner/admin deletes a collection.
+- `POST /api/auth/login` - JWT login for normal users.
+- `POST /api/auth/google` - Google One Tap / Google button login with auto sign-up.
+- `POST /api/auth/logout` - clears user auth cookie.
+- `GET /api/auth/me` - current logged-in user session.
+- `POST /api/admin/login` - hardcoded admin login (`mani` / `Mani@123`).
+- `POST /api/admin/logout` - clears admin session cookie.
+- `GET /api/admin/me` - checks admin authentication.
+- `GET /api/admin/users` - admin-only user/consumer management data.
+- `GET /api/admin/users/:userId` - full user data (dresses, collections, all orders, transactions).
+- `PATCH /api/admin/users/:userId` - admin edits user details/role from UI.
+- `DELETE /api/admin/users/:userId` - admin deletes user with related dresses/orders/transactions.
+- `PATCH /api/admin/collections/:collectionId` - admin edits any user collection.
+- `DELETE /api/admin/collections/:collectionId` - admin deletes any user collection.
+- `POST /api/checkout/phonepe` - checkout route supporting:
+  - `mode: "mock"` for free simulated test flow
+  - `mode: "real"` for signed PhonePe initiation request
+- `GET /api/checkout/phonepe/status?merchantTransactionId=...` - verify real PhonePe transaction status and sync order state.
+- `POST /api/checkout/phonepe/callback` - callback receiver endpoint.
 
-## Deploy on Vercel
+> If you come from FastAPI: treat each `app/api/**/route.ts` file like a backend router module.  
+> `export async function GET/POST/...` are your backend handlers, and they run server-side.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Seed Data
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Seed source file: `data/seed.json`.
+
+Seed script: `scripts/seed.js` hashes user passwords and inserts `User`, `Dress`, `Order`, `Transaction`, and `Collection` data.
